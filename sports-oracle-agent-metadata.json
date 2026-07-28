@@ -2,23 +2,18 @@
     "name": "sports-oracle",
     "agent_id": "sports-oracle",
     "short_description": "Real-time sports data for AI agents",
-    "description": "Live sports oracle covering NBA, NHL, MLB, NFL, F1, soccer, tennis, and MMA. Injuries, scores, schedule, standings, teams — via REST and MCP. Wraps the Sports Oracle API (79 REST endpoints, 18 MCP tools).",
+    "description": "Live sports oracle covering NBA, NHL, MLB, NFL, F1, soccer, tennis, and MMA. Injuries, scores, schedule, standings, teams.",
     "agent_type": "mcp",
-    "capabilities": [
-        {
-            "name": "developer-tools",
-            "description": "Provides real-time sports data across 8 major sports leagues"
-        }
-    ],
+    "capabilities": [{"name": "developer-tools", "description": "Sports data API"}],
     "commands": [
-        {"name": "nba", "description": "NBA data: injuries, scores, schedule, standings, teams", "price": "0.001"},
-        {"name": "nhl", "description": "NHL data: injuries, scores, schedule, standings, teams", "price": "0.001"},
-        {"name": "mlb", "description": "MLB data: injuries, scores, schedule, standings, teams", "price": "0.001"},
-        {"name": "nfl", "description": "NFL data: injuries, scores, schedule, standings, teams", "price": "0.001"},
-        {"name": "f1", "description": "Formula 1 data: race results, schedule, standings, constructors", "price": "0.001"},
-        {"name": "soccer", "description": "Soccer data: injuries, scores, schedule, standings, teams", "price": "0.001"},
-        {"name": "tennis", "description": "Tennis data: scores, schedule, rankings, player status", "price": "0.001"},
-        {"name": "mma", "description": "MMA data: fight results, fight cards, rankings, fighter status", "price": "0.001"}
+        {"name": "nba", "trigger": "nba", "description": "NBA data: injuries, scores, schedule, standings, teams", "price": "0.001"},
+        {"name": "nhl", "trigger": "nhl", "description": "NHL data: injuries, scores, schedule, standings, teams", "price": "0.001"},
+        {"name": "mlb", "trigger": "mlb", "description": "MLB data: injuries, scores, schedule, standings, teams", "price": "0.001"},
+        {"name": "nfl", "trigger": "nfl", "description": "NFL data: injuries, scores, schedule, standings, teams", "price": "0.001"},
+        {"name": "f1", "trigger": "f1", "description": "Formula 1 data: race results, schedule, standings, constructors", "price": "0.001"},
+        {"name": "soccer", "trigger": "soccer", "description": "Soccer data: injuries, scores, schedule, standings, teams", "price": "0.001"},
+        {"name": "tennis", "trigger": "tennis", "description": "Tennis data: scores, schedule, rankings, player status", "price": "0.001"},
+        {"name": "mma", "trigger": "mma", "description": "MMA data: fight results, fight cards, rankings, fighter status", "price": "0.001"}
     ],
     "nlp_fallback": true,
     "categories": ["Developer Tools"],
