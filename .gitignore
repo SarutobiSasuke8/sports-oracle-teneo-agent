@@ -1,0 +1,21 @@
+# Binaries
+sports-oracle-teneo-agent
+*.exe
+*.out
+/bin/
+/dist/
+
+# Env / secrets — never commit live keys
+.env
+.env.*
+*.key
+
+# Go
+vendor/
+*.test
+coverage.*
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
