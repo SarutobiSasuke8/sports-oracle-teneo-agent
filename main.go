@@ -31,12 +31,12 @@ const (
 	mcpPath       = "/api/mcp"
 )
 
-// Sports commands the agent exposes (see metadata.json). The upstream API
-// also serves wnba and esports, which we accept as a courtesy.
+// Sports commands the agent exposes. This must stay in sync with the commands
+// in sports-oracle-agent-metadata.json, which is what Teneo prices and
+// advertises: serving a sport that is not listed there means serving it unpaid.
 var supportedSports = map[string]bool{
 	"nba": true, "nhl": true, "mlb": true, "nfl": true,
 	"f1": true, "soccer": true, "tennis": true, "mma": true,
-	"wnba": true, "esports": true,
 }
 
 var supportedResources = map[string]bool{
@@ -255,7 +255,16 @@ func (s *server) fetchOracle(sport, resource string, query url.Values) (interfac
 
 	var data interface{}
 	if err := json.Unmarshal(body, &data); err != nil {
-		return string(body), resp.StatusCode, nil
+		// On an error status, a non-JSON body is still useful as error text;
+		// the caller surfaces it via upstreamErrorMessage. On a 2xx it means
+		// we never reached the API (an SPA fallback page, a proxy
+		// interstitial), so fail loudly rather than bill for a web page.
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			return string(body), resp.StatusCode, nil
+		}
+		return nil, resp.StatusCode, fmt.Errorf(
+			"expected JSON from sports oracle, got %q (HTTP %d); check that %s serves the API",
+			resp.Header.Get("Content-Type"), resp.StatusCode, u)
 	}
 	return data, resp.StatusCode, nil
 }

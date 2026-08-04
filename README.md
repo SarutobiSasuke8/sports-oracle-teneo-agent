@@ -1,6 +1,6 @@
 # Sports Oracle — Teneo Protocol Agent
 
-A [Teneo Protocol](https://teneo.pro) agent that wraps the **Sports Oracle API**, exposing real-time sports data (injuries, live scores, schedules, standings, teams) across 10 sports as paid on-chain agent commands. Payments are handled by x402 USDC micropayments at **$0.001 per command**.
+A [Teneo Protocol](https://teneo.pro) agent that wraps the **Sports Oracle API**, exposing real-time sports data (injuries, live scores, schedules, standings, teams) across 8 sports as paid on-chain agent commands. Payments are handled by x402 USDC micropayments at **$0.001 per command**.
 
 - REST upstream: `https://sports-oracle.vercel.app/api/v1/{sport}/{resource}` (79 endpoints)
 - MCP upstream: `https://sports-oracle.vercel.app/api/mcp` (18 tools)
@@ -19,7 +19,7 @@ A [Teneo Protocol](https://teneo.pro) agent that wraps the **Sports Oracle API**
 | `tennis` | Tennis | injuries, scores, schedule, standings, teams |
 | `mma` | MMA | injuries, scores, schedule, standings, teams |
 
-The service also accepts `wnba` and `esports`, which the upstream API covers. Every command costs $0.001 USDC via x402.
+Every sport supports the same five resources: `injuries`, `scores`, `schedule`, `standings`, `teams`.
 
 ## Setup
 
@@ -104,7 +104,7 @@ Teneo agents are minted as NFTs, run as background services, and are queryable v
 # 1. Scaffold the agent on-chain
 teneo agent create
 
-# 2. Edit metadata (this repo's metadata.json is the source of truth:
+# 2. Edit metadata (sports-oracle-agent-metadata.json is the source of truth:
 #    agent_type "mcp", 8 sport commands at $0.001 each)
 
 # 3. Deploy the service (build the binary and point the deployment at it,
@@ -124,9 +124,10 @@ teneo query sports-oracle nba --resource injuries
 ## Project layout
 
 ```
-metadata.json   Teneo agent metadata (commands, pricing, env, MCP endpoint)
-main.go         Agent HTTP service: /command, /mcp proxy, /health
-go.mod          Go module (stdlib only, no dependencies)
+sports-oracle-agent-metadata.json   Teneo agent metadata (commands, pricing)
+main.go                             Agent HTTP service: /command, /mcp proxy, /health
+main_test.go                        Tests for command routing and upstream handling
+go.mod                              Go module (stdlib only, no dependencies)
 ```
 
 ## License
