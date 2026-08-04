@@ -6,14 +6,94 @@
     "agent_type": "mcp",
     "capabilities": [{"name": "developer-tools", "description": "Sports data API"}],
     "commands": [
-        {"name": "nba", "trigger": "nba", "description": "NBA data: injuries, scores, schedule, standings, teams", "price": "0.001"},
-        {"name": "nhl", "trigger": "nhl", "description": "NHL data: injuries, scores, schedule, standings, teams", "price": "0.001"},
-        {"name": "mlb", "trigger": "mlb", "description": "MLB data: injuries, scores, schedule, standings, teams", "price": "0.001"},
-        {"name": "nfl", "trigger": "nfl", "description": "NFL data: injuries, scores, schedule, standings, teams", "price": "0.001"},
-        {"name": "f1", "trigger": "f1", "description": "Formula 1 data: race results, schedule, standings, constructors", "price": "0.001"},
-        {"name": "soccer", "trigger": "soccer", "description": "Soccer data: injuries, scores, schedule, standings, teams", "price": "0.001"},
-        {"name": "tennis", "trigger": "tennis", "description": "Tennis data: scores, schedule, rankings, player status", "price": "0.001"},
-        {"name": "mma", "trigger": "mma", "description": "MMA data: fight results, fight cards, rankings, fighter status", "price": "0.001"}
+        {
+            "name": "nba",
+            "trigger": "nba",
+            "description": "NBA data: injuries, scores, schedule, standings, teams",
+            "parameters": [
+                {"name": "resource", "type": "enum", "options": ["injuries", "scores", "schedule", "standings", "teams"]}
+            ],
+            "pricePerUnit": 0.001,
+            "priceType": "task-transaction",
+            "taskUnit": "per-query"
+        },
+        {
+            "name": "nhl",
+            "trigger": "nhl",
+            "description": "NHL data: injuries, scores, schedule, standings, teams",
+            "parameters": [
+                {"name": "resource", "type": "enum", "options": ["injuries", "scores", "schedule", "standings", "teams"]}
+            ],
+            "pricePerUnit": 0.001,
+            "priceType": "task-transaction",
+            "taskUnit": "per-query"
+        },
+        {
+            "name": "mlb",
+            "trigger": "mlb",
+            "description": "MLB data: injuries, scores, schedule, standings, teams",
+            "parameters": [
+                {"name": "resource", "type": "enum", "options": ["injuries", "scores", "schedule", "standings", "teams"]}
+            ],
+            "pricePerUnit": 0.001,
+            "priceType": "task-transaction",
+            "taskUnit": "per-query"
+        },
+        {
+            "name": "nfl",
+            "trigger": "nfl",
+            "description": "NFL data: injuries, scores, schedule, standings, teams",
+            "parameters": [
+                {"name": "resource", "type": "enum", "options": ["injuries", "scores", "schedule", "standings", "teams"]}
+            ],
+            "pricePerUnit": 0.001,
+            "priceType": "task-transaction",
+            "taskUnit": "per-query"
+        },
+        {
+            "name": "f1",
+            "trigger": "f1",
+            "description": "Formula 1 data: injuries, scores, schedule, standings, teams",
+            "parameters": [
+                {"name": "resource", "type": "enum", "options": ["injuries", "scores", "schedule", "standings", "teams"]}
+            ],
+            "pricePerUnit": 0.001,
+            "priceType": "task-transaction",
+            "taskUnit": "per-query"
+        },
+        {
+            "name": "soccer",
+            "trigger": "soccer",
+            "description": "Soccer data: injuries, scores, schedule, standings, teams",
+            "parameters": [
+                {"name": "resource", "type": "enum", "options": ["injuries", "scores", "schedule", "standings", "teams"]}
+            ],
+            "pricePerUnit": 0.001,
+            "priceType": "task-transaction",
+            "taskUnit": "per-query"
+        },
+        {
+            "name": "tennis",
+            "trigger": "tennis",
+            "description": "Tennis data: injuries, scores, schedule, standings, teams",
+            "parameters": [
+                {"name": "resource", "type": "enum", "options": ["injuries", "scores", "schedule", "standings", "teams"]}
+            ],
+            "pricePerUnit": 0.001,
+            "priceType": "task-transaction",
+            "taskUnit": "per-query"
+        },
+        {
+            "name": "mma",
+            "trigger": "mma",
+            "description": "MMA data: injuries, scores, schedule, standings, teams",
+            "parameters": [
+                {"name": "resource", "type": "enum", "options": ["injuries", "scores", "schedule", "standings", "teams"]}
+            ],
+            "pricePerUnit": 0.001,
+            "priceType": "task-transaction",
+            "taskUnit": "per-query"
+        }
     ],
     "nlp_fallback": true,
     "categories": ["Developer Tools"],
