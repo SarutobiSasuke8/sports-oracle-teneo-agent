@@ -1,10 +1,20 @@
 # Sports Oracle — Teneo Protocol Agent
 
-A [Teneo Protocol](https://teneo.pro) agent that wraps the **Sports Oracle API**, exposing real-time sports data (injuries, live scores, schedules, standings, teams) across 8 sports as paid on-chain agent commands. Payments are handled by x402 USDC micropayments at **$0.001 per command**.
+A [Teneo Protocol](https://teneo.pro) agent that wraps the **Sports Oracle API**, exposing real-time sports data (injuries, live scores, schedules, standings, teams) across 8 sports as paid on-chain agent commands priced at **$0.001 per command**.
 
-- REST upstream: `https://sports-oracle.vercel.app/api/v1/{sport}/{resource}` (79 endpoints)
-- MCP upstream: `https://sports-oracle.vercel.app/api/mcp` (18 tools)
-- Auth: `X-Oracle-Key` header (handled by this agent; configure via env var)
+**This service contains no payment code.** Payment enforcement (x402 USDC micropayments) is expected from the Teneo runtime that fronts the agent. Only expose this service through that runtime — never directly to the public internet — or every command it serves is served for free.
+
+- REST upstream: `{SPORTS_ORACLE_BASE_URL}/api/v1/{sport}/{resource}` (79 endpoints)
+- MCP upstream: `{SPORTS_ORACLE_BASE_URL}/api/mcp` (18 tools)
+- Auth: `X-Oracle-Key` header (injected by this agent; configure via env var)
+
+## Status
+
+**Prototype — the default upstream URL does not currently serve the API.** `https://sports-oracle.vercel.app` returns an SPA HTML shell, and `POST /api/mcp` answers 405, so the agent has no live upstream out of the box. Deploy a Sports Oracle instance (or obtain access to a live one) and point `SPORTS_ORACLE_BASE_URL` at it. The `/health` endpoint reports what it found via the `upstream` field.
+
+### Security note: previously committed sandbox key
+
+Earlier revisions of this repository committed a literal sandbox API key in both `main.go` and this README. That key remains in the git history and **must be considered burned**: revoke/rotate it on the Sports Oracle side and do not reuse it. No key ships with the code any more — the agent refuses to start without `SPORTS_ORACLE_KEY` set.
 
 ## Commands
 
@@ -23,7 +33,7 @@ Every sport supports the same five resources: `injuries`, `scores`, `schedule`, 
 
 ## Setup
 
-Requires Go 1.22+.
+Requires Go 1.24+.
 
 ```bash
 git clone https://github.com/SarutobiSasuke8/sports-oracle-teneo-agent
@@ -35,9 +45,9 @@ go build -o sports-oracle-teneo-agent .
 
 | Env var | Default | Description |
 |---------|---------|-------------|
-| `SPORTS_ORACLE_KEY` | sandbox key | Sports Oracle API key sent as `X-Oracle-Key`. The bundled default (`sk_test_886492645fd15c41a37c4101c8b616a2`) is a **sandbox key for testing only** — live data requires a staked key. |
+| `SPORTS_ORACLE_KEY` | **required, no default** | Sports Oracle API key sent as `X-Oracle-Key`. The agent exits at startup with a clear error when it is unset. Use your own sandbox key (e.g. `sk_test_YOUR_KEY`) for testing — live data requires a staked key. |
 | `PORT` | `8080` | Port the agent service listens on. |
-| `SPORTS_ORACLE_BASE_URL` | `https://sports-oracle.vercel.app` | Upstream base URL (override for testing). |
+| `SPORTS_ORACLE_BASE_URL` | `https://sports-oracle.vercel.app` | Upstream base URL. See [Status](#status): the default does not currently serve the API, so point this at a live Sports Oracle instance. |
 
 ```bash
 export SPORTS_ORACLE_KEY=sk_live_your_staked_key
@@ -51,6 +61,17 @@ export SPORTS_ORACLE_KEY=sk_live_your_staked_key
 ```bash
 curl http://localhost:8080/health
 ```
+
+```json
+{
+  "status": "ok",
+  "agent": "sports-oracle",
+  "version": "1.0.0",
+  "upstream": "ok"
+}
+```
+
+`upstream` is a live connectivity probe of the configured `SPORTS_ORACLE_BASE_URL`: `"ok"` means the upstream answered with JSON (the API layer is there, even if the answer is a JSON error), `"unreachable"` means it did not respond or returned non-JSON (e.g. the SPA HTML shell). The probe never fails the health response itself.
 
 ### Execute a command
 
