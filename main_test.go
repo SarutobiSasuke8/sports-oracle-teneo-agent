@@ -209,6 +209,87 @@ func TestCommandNormalization(t *testing.T) {
 	}
 }
 
+// The API key must come from the environment; there is no bundled fallback.
+func TestAPIKeyRequiredFromEnv(t *testing.T) {
+	t.Setenv("SPORTS_ORACLE_KEY", "")
+	if _, err := requiredEnv("SPORTS_ORACLE_KEY"); err == nil {
+		t.Fatal("missing SPORTS_ORACLE_KEY did not produce an error")
+	}
+
+	t.Setenv("SPORTS_ORACLE_KEY", "sk_test_from_env")
+	got, err := requiredEnv("SPORTS_ORACLE_KEY")
+	if err != nil {
+		t.Fatalf("set SPORTS_ORACLE_KEY produced error: %v", err)
+	}
+	if got != "sk_test_from_env" {
+		t.Errorf("requiredEnv = %q, want sk_test_from_env", got)
+	}
+}
+
+func getHealth(t *testing.T, s *server) map[string]string {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	rec := httptest.NewRecorder()
+	s.handleHealth(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("health status = %d, want 200", rec.Code)
+	}
+	var out map[string]string
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("health response was not valid JSON: %v (body: %s)", err, rec.Body.String())
+	}
+	return out
+}
+
+// A JSON-speaking upstream is reported as reachable.
+func TestHealthReportsUpstreamOK(t *testing.T) {
+	s, done := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"teams":[]}`))
+	})
+	defer done()
+
+	out := getHealth(t, s)
+	if out["status"] != "ok" {
+		t.Errorf("status = %q, want ok", out["status"])
+	}
+	if out["upstream"] != "ok" {
+		t.Errorf("upstream = %q, want ok", out["upstream"])
+	}
+}
+
+// An SPA HTML shell is not the API: health must say so, without failing the
+// health response itself.
+func TestHealthReportsUpstreamUnreachableOnHTML(t *testing.T) {
+	s, done := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write([]byte("<!doctype html><html><body>Sports Oracle</body></html>"))
+	})
+	defer done()
+
+	out := getHealth(t, s)
+	if out["status"] != "ok" {
+		t.Errorf("status = %q, want ok even when upstream is down", out["status"])
+	}
+	if out["upstream"] != "unreachable" {
+		t.Errorf("upstream = %q, want unreachable", out["upstream"])
+	}
+}
+
+// A dead upstream (connection refused) is reported as unreachable.
+func TestHealthReportsUpstreamUnreachableOnDeadServer(t *testing.T) {
+	s, done := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {})
+	done() // close the stub so the probe gets connection refused
+
+	out := getHealth(t, s)
+	if out["status"] != "ok" {
+		t.Errorf("status = %q, want ok even when upstream is down", out["status"])
+	}
+	if out["upstream"] != "unreachable" {
+		t.Errorf("upstream = %q, want unreachable", out["upstream"])
+	}
+}
+
 // Every command in the metadata file must be served by the code, and vice
 // versa. This is the mismatch that shipped in the first cut.
 func TestMetadataCommandsMatchCode(t *testing.T) {

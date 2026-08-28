@@ -8,6 +8,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,9 +24,6 @@ import (
 const (
 	defaultPort    = "8080"
 	defaultBaseURL = "https://sports-oracle.vercel.app"
-	// Sandbox key for testing only. Live access requires a staked key —
-	// set SPORTS_ORACLE_KEY to override.
-	sandboxKey = "sk_test_886492645fd15c41a37c4101c8b616a2"
 
 	apiPathPrefix = "/api/v1"
 	mcpPath       = "/api/mcp"
@@ -74,10 +72,9 @@ type server struct {
 func main() {
 	port := envOr("PORT", defaultPort)
 	baseURL := strings.TrimRight(envOr("SPORTS_ORACLE_BASE_URL", defaultBaseURL), "/")
-	apiKey := envOr("SPORTS_ORACLE_KEY", sandboxKey)
-
-	if apiKey == sandboxKey {
-		log.Println("warning: using sandbox API key; set SPORTS_ORACLE_KEY for live data")
+	apiKey, err := requiredEnv("SPORTS_ORACLE_KEY")
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	s := &server{
@@ -105,10 +102,44 @@ func main() {
 
 func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{
-		"status":  "ok",
-		"agent":   "sports-oracle",
-		"version": "1.0.0",
+		"status":   "ok",
+		"agent":    "sports-oracle",
+		"version":  "1.0.0",
+		"upstream": s.probeUpstream(r.Context()),
 	})
+}
+
+// probeUpstream reports whether the configured upstream actually serves the
+// JSON API rather than an SPA HTML shell or nothing at all. Any JSON answer —
+// including a JSON error body — counts as "ok", because it proves the API
+// layer responded. The probe never fails the health response itself.
+func (s *server) probeUpstream(ctx context.Context) string {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	u := s.baseURL + apiPathPrefix + "/nba/teams"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return "unreachable"
+	}
+	req.Header.Set("X-Oracle-Key", s.apiKey)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return "unreachable"
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return "unreachable"
+	}
+	var v interface{}
+	if json.Unmarshal(body, &v) != nil {
+		return "unreachable"
+	}
+	return "ok"
 }
 
 // handleCommand executes a Teneo agent command: {"command":"nba","params":{"resource":"injuries"}}
@@ -303,6 +334,15 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// requiredEnv reads an environment variable that must be set. No key ships
+// with this repository; the agent refuses to start without one.
+func requiredEnv(key string) (string, error) {
+	if v := os.Getenv(key); v != "" {
+		return v, nil
+	}
+	return "", fmt.Errorf("%s is not set: it must contain your Sports Oracle API key (sent as X-Oracle-Key); the agent refuses to start without one", key)
 }
 
 func keys(m map[string]bool) string {
